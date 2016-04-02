@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+canvas {
+    border:1px solid black;
+    background-color: #d2d2d2;
+}
+</style>
+</head>
+<body onload="start()">
+<script>
+
+	var frictionX = 0.15;	
+	var frictionY = 0;	
+
+	var game = {
+		canvas : document.createElement("canvas"),
+		start : function() {
+			this.canvas.width = 400;
+			this.canvas.height = 400;
+			this.context = this.canvas.getContext("2d");
+			document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+			this.time = 0;
+			timer = setInterval(updateGame, 20);
+			},
+		clear : function() {
+			this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		}
+	}
+
+	function start() {
+		
+		papis = [];
+		papis.push( new Sprite("papi", 30, 30, 0, 0, 200, 50, 0.1, "red"));
+		papis.push( new Sprite("papi", 15, 15, 0, 0, 350, 20, 0, "red"));
+		papis.push( new Sprite("papi", 15, 15, 0, 0, 370, 20, 0, "red"));
+		
+		jumps = [];
+		spawnJump(100);
+		spawnJump(150);
+		spawnJump(200);
+		spawnJump(250);
+
+		score = 0;
+		scoreZone = new ScoreZone();
+
+		game.start();
+	}
+
+	function ScoreZone() {
+		this.update = function(score) {
+			game.context.font = "25px Impact";
+            game.context.fillStyle = "black";
+            game.context.fillText(score.toString(), 10, 40);
+		}	
+	}
+	
+	function Sprite(type,w,h,sx,sy,x,y,gy,col) {
+
+		//init
+		this.type = type;
+		this.width = w;
+		this.height = h;
+		this.speedX = sx;
+		this.speedY = sy;    
+		this.x = x;
+		this.y = y;
+		this.gravityY = gy;
+		this.gravityX = 0;
+		this.color = col;
+		this.scored = 0;
+
+		//newposition then draw
+		this.update = function() {
+			
+			//new position
+			this.speedX = (this.speedX + this.gravityX) * (1 - frictionX)
+			this.speedY = (this.speedY + this.gravityY) * (1 - frictionY)
+			this.x = (this.x + this.speedX) % game.canvas.width;
+			this.x += this.x<0 ? game.canvas.width : 0
+			this.y += this.speedY;
+			
+			if (this.type == "papi") {
+				if (this.y > game.canvas.height - this.height) {
+					papis.shift();
+					if (papis.length == 0) {
+						clearInterval(timer)
+						startGame()
+					}
+					papis[0].toPlay();
+				}
+			}
+
+			//draw
+			game.context.fillStyle = this.color;
+			if (type == "papi") {
+				game.context.beginPath();
+				game.context.arc(this.x+this.width/2,this.y+this.height/2, this.height / 2.0 , 0, 2 * Math.PI, false);
+				game.context.fill();
+				game.context.fillStyle = "black";
+				game.context.fillRect(this.x+this.width*0.3, this.y+this.height*0.3, this.width*0.1, this.height*0.3);
+				game.context.fillRect(this.x+this.width*0.6, this.y+this.height*0.3, this.width*0.1, this.height*0.3);
+				game.context.fillRect(this.x+this.width*0.2, this.y+this.height*0.7, this.width*0.6, this.height*0.1);
+			}
+			else
+				game.context.fillRect(this.x, this.y, this.width, this.height);
+		}
+
+		// transform a waiting papi into a playing papi
+		this.toPlay = function() {
+			this.height = 30
+			this.width = 30
+			this.speedX = -10
+			this.speedY = 0
+			this.gravityY = 0.1
+		}
+			
+		this.collision = function(other) {
+			if (((this.y + this.height) < other.y) 
+				|| (this.y > (other.y + other.height))
+				|| ((this.x + this.width) < other.x)
+				|| (this.x > (other.x + other.width))) return false;
+			else return true;
+		}
+	}
+
+	document.onkeydown = function(e){
+		if ((e.which == 39))
+			papis[0].gravityX = 0.53; 
+		if ((e.which == 37))
+			papis[0].gravityX = -0.53;
+		}
+
+	document.onkeyup = function(e){
+		if ((e.which == 39)&& (papis[0].speedX == 5))
+			papis[0].gravityX = 0;
+		if ((e.which == 37)&& (papis[0].speedX == -5))
+			papis[0].gravityX = 0;
+		}
+
+		
+	function spawnJump(height) {
+		jumpMinWidth = 40;
+		jumpMaxWidth = 60;
+		jumpOrangeProb = 0.1
+
+		jumpWidth = Math.floor(Math.random()*(jumpMaxWidth - jumpMinWidth + 1) +
+				jumpMinWidth);
+		jumpPos = Math.floor(Math.random() * (game.canvas.width - jumpWidth+1));
+		if (Math.random() < jumpOrangeProb)
+			jumps.push(new Sprite("jump", jumpWidth, 10, 0, 1.8, jumpPos, height, 0,
+				"orange"));
+		else
+			jumps.push(new Sprite("jump", jumpWidth, 10, 0, 1.5, jumpPos, height, 0,
+				"green"));
+	}
+	
+	function updateGame() {
+	    
+		//process collisions
+		for (i = 0; i < jumps.length; i += 1) {
+			if (papis[0].collision(jumps[i])) {
+				if (jumps[i].color == "orange") {
+					papis[0].speedY = -4 -3*(papis[0].y/game.canvas.height)
+					score += 2
+				} else {
+					papis[0].speedY = -2 -3*(papis[0].y/game.canvas.height)
+					score += 1
+					// TODO: set up a setter
+				}
+			}
+		}
+		
+		// draw
+		game.clear();
+		game.time += 1;
+		for (i = 0; i < jumps.length; i += 1) jumps[i].update();
+		
+		//every 50 , spawn a new jump board
+		if (game.time == 1 || ((game.time / 50) % 1 == 0)) spawnJump(50)
+		
+		for (i = 0; i < papis.length; i += 1) papis[i].update();
+		
+		scoreZone.update(score);  
+	}
+
+
+</script>
+</body>
+</html>
