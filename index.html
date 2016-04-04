@@ -63,12 +63,9 @@ canvas {
 			papis = [];
 			papis.push( new sprite("papi", 15, 15, 0, 0, 330, 20, 0, "red"));
 			papis.push( new sprite("papi", 15, 15, 0, 0, 350, 20, 0, "red"));
-			papis.push( new sprite("papi", 15, 15, 0, 0, game.canvas.width - 70, 20, 0, "red"));
+			papis.push( new sprite("papi", 15, 15, 0, 0, 370, 20, 0, "red"));
 			jumps = [];
-			spawnJump(100);
-			spawnJump(150);
-			spawnJump(200);
-			spawnJump(250);
+			updateGame();
 
 			//splash
 			game.context.fillStyle = "#AAFFAA";
@@ -88,6 +85,10 @@ canvas {
 			timer = setInterval(updateGame, 20);
 			papis[0].toPlay()
 			sound_start.play()
+			spawnJump(100);
+			spawnJump(150);
+			spawnJump(200);
+			spawnJump(250);
 		},
 		clear : function() {
 			this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -130,7 +131,9 @@ canvas {
 		this.gravityY = gy;
 		this.gravityX = 0;
 		this.color = col;
-		this.scored = 0;
+		this.lastBounce = 0;
+		this.comment="";
+		
 
 		//newposition then draw
 		this.update = function() {
@@ -141,7 +144,7 @@ canvas {
 			this.x = (this.x + this.speedX) % game.canvas.width;
 			this.x += this.x<0 ? game.canvas.width : 0
 			this.y += this.speedY;
-			
+			//this.comment = this.lastBounce.toString()
 			if (this.type == "papi") {
 				if (this.y > game.canvas.height - this.height) {
 					papis.shift();
@@ -166,6 +169,10 @@ canvas {
 			}
 			else
 				game.context.fillRect(this.x, this.y, this.width, this.height);
+				game.context.font = "10px Impact";
+				game.context.textAlign="center";
+				game.context.fillText(this.comment,this.x +this.width*0.5 ,this.y -5); 
+				
 		}
 
 		// transform a waiting papi into a playing papi
@@ -209,6 +216,7 @@ canvas {
 		var jumpMinWidth = 40;
 		var jumpMaxWidth = 60;
 		var jumpOrangeProb = 0.1
+		var jumpRedProb = 0.1
 		//board falls faster and faster with score
 		speed = Math.log(game.score + 1)/20 + 1
 
@@ -218,6 +226,9 @@ canvas {
 		if (Math.random() < jumpOrangeProb)
 			jumps.push(new sprite("jump", jumpWidth, 10, 0, 1.8 * speed, jumpPos, height, 0,
 				"orange"));
+		else if (Math.random() < jumpRedProb)
+			jumps.push(new sprite("jump", jumpWidth, 10, 0, 2.5 * speed, jumpPos, height, 0,
+				"red"));
 		else
 			jumps.push(new sprite("jump", jumpWidth, 10, 0, 1.5 * speed , jumpPos, height, 0,
 				"green"));
@@ -227,7 +238,8 @@ canvas {
 	    
 		//process collisions
 		for (i = 0; i < jumps.length; i += 1) {
-			if (papis[0].collision(jumps[i])) {
+			if (papis[0].collision(jumps[i]) && (game.time - jumps[i].lastBounce > 10 )) {
+				jumps[i].lastBounce = game.time
 				if (jumps[i].color == "orange") {
 					papis[0].speedY = -4 -3*(papis[0].y/game.canvas.height)
 					game.score += 2
@@ -243,6 +255,11 @@ canvas {
 					else
 						sound_bounce.cloneNode(true).play()
 					// TODO: set up a setter
+					if (jumps[i].color == "red") {
+						papis[0].height = 40
+						papis[0].width = 40
+					}
+					
 				}
 			}
 		}
@@ -252,7 +269,7 @@ canvas {
 		game.time += 1;
 		for (i = 0; i < jumps.length; i += 1) jumps[i].update();
 		
-		//every 50 , spawn a new jump board
+		//every 50 ticks, spawn a new jump board
 		if (game.time == 1 || ((game.time / 50) % 1 == 0)) spawnJump(50)
 		
 		for (i = 0; i < papis.length; i += 1) papis[i].update();
