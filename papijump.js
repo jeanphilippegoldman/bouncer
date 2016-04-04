@@ -1,10 +1,10 @@
 	var game = {
 		//
 		canvas : document.createElement("canvas"),
+		bestScore : 0,
+		score : 0,
 		initArea : function (){
 			var size = mySize();
-			frictionX = 0.05;	
-			frictionY = 0;
 			this.canvas.id = "gameCanvas"			
 			this.canvas.width = Math.min(400, 0.9 * size[0]);
 			this.canvas.height = Math.min(600, 0.9 * size[1]);
@@ -15,6 +15,7 @@
 			sound_loose1 = document.getElementById("sound_loose1");
 			sound_bounce = document.getElementById("sound_bounce");
 			sound_bounce1 = document.getElementById("sound_bounce1");
+			img_star = document.getElementById("star");
 		},
 		initGame : function() {
 			started = 0
@@ -23,6 +24,7 @@
 			papis.push( new sprite("papi", 15, 15, 0, 0, 350, 20, 0, "red"));
 			papis.push( new sprite("papi", 15, 15, 0, 0, 370, 20, 0, "red"));
 			jumps = [];
+			stars = []
 			updateGame();
 
 			//splash
@@ -37,7 +39,7 @@
 			game.context.fillText("best "+this.bestScore.toString(),this.canvas.width * 0.5,this.canvas.height * 0.7); 
 		},
 		start : function() {
-			score = 0;
+			this.score = 0;
 			started = 1;
 			this.time = 0;
 			timer = setInterval(updateGame, 20);
@@ -51,8 +53,6 @@
 		clear : function() {
 			this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		},
-		bestScore : 0,
-		score : 0,
 		scoreZone : function(number) {
 			game.context.font = "25px Impact";
             game.context.fillStyle = "black";
@@ -90,14 +90,20 @@
 		this.color = col;
 		this.lastBounce = 0;
 		this.comment="";
-		
+		this.frictionX = 0.05;	
+		this.frictionY = 0;
+		if (this.type=="star") {
+			this.value = 1
+			this.frictionX = 0.00105
+			this.frictionY = 0.00105
+			}
 
 		//newposition then draw
 		this.update = function() {
 			
 			//new position
-			this.speedX = (this.speedX + this.gravityX) * (1 - frictionX)
-			this.speedY = (this.speedY + this.gravityY) * (1 - frictionY)
+			this.speedX = (this.speedX + this.gravityX) * (1 - this.frictionX)
+			this.speedY = (this.speedY + this.gravityY) * (1 - this.frictionY)
 			this.x = (this.x + this.speedX) % game.canvas.width;
 			this.x += this.x<0 ? game.canvas.width : 0
 			this.y += this.speedY;
@@ -117,7 +123,12 @@
 					papis[0].width -= 0.01
 
 			}
-
+			if (this.type =="star") {
+				this.gravityY = -0.05*(this.y/game.canvas.height-0.5)
+				this.comment = "+"+this.value.toString()
+			}
+			//TODO if a star falls, remove from stars array
+			
 			//draw
 			game.context.fillStyle = this.color;
 			if (type == "papi") {
@@ -128,12 +139,20 @@
 				game.context.fillRect(this.x+this.width*0.3, this.y+this.height*0.3, this.width*0.1, this.height*0.3);
 				game.context.fillRect(this.x+this.width*0.6, this.y+this.height*0.3, this.width*0.1, this.height*0.3);
 				game.context.fillRect(this.x+this.width*0.2, this.y+this.height*0.7, this.width*0.6, this.height*0.1);
+			} else if(type == "star"){
+				//game.context.save(); 
+				//game.context.translate(this.x, this.y);
+				//game.context.rotate(angle /180 * Math.PI);
+				// game.context.drawImage(img_star, this.x, this.y );
+				//game.context.drawImage(img_star, -(img_star.width/2), -(img_star.height/2));
+				//game.context.restore(); 
+				game.context.fillRect(this.x, this.y, this.width, this.height);
 			}
 			else
 				game.context.fillRect(this.x, this.y, this.width, this.height);
 			
-			this.comment = this.width.toString()+"  ("+jumpMinWidth.toString()+" ; "+jumpMaxWidth.toString()+" )"
-			game.context.font = "10px Impact";
+			//this.comment = this.width.toString()+"  ("+jumpMinWidth.toString()+" ; "+jumpMaxWidth.toString()+" )"
+			game.context.font = "20px Impact";
 			game.context.textAlign="center";
 			game.context.fillText(this.comment,this.x +this.width*0.5 ,this.y -5); 
 				
@@ -207,23 +226,36 @@
 					// TODO: set up a setter
 					if (jumps[i].color == "red") {
 						jumps[i].color = "orange"
-						if (Math.random() < 0.25) {
+						if (Math.random() < 0.025) {
 							//BIG PAPI
 							papis[0].height = 60
 							papis[0].width = 60
-						} else if (Math.random() < 0.25) {
+						} else if (Math.random() < 0.025) {
 							//BIG JUMP BOARDS
 							jumpMinWidth = 200
 							jumpMaxWidth = 300
-						}
-
+						} else
+							//STAR
+							stars.push(new sprite("star", 15, 15, 2*Math.random()-1, 2*Math.random() , 200, 50, 0.02,"yellow"));
 						
 					}
 					
 				}
 			}
 		}
-		
+
+
+		for (i = 0; i < stars.length; i += 1) {
+			if (papis[0].collision(stars[i]) && (game.time - stars[i].lastBounce > 30 )) {
+				stars[i].lastBounce = game.time
+				stars[i].speedX = 0.5+Math.random()
+				stars[i].speedY = 0.5+Math.random()
+				sound_bounce1.play()
+				game.score += stars[i].value
+				stars[i].value += 1
+				
+			}
+		}
 		// draw
 		game.clear();
 		game.time += 1;
@@ -233,7 +265,7 @@
 		if (game.time == 1 || ((game.time / 50) % 1 == 0)) spawnJump(50)
 		
 		for (i = 0; i < papis.length; i += 1) papis[i].update();
-		
+		for (i = 0; i < stars.length; i += 1) stars[i].update();
 		game.scoreZone(game.score);  
 	}
 	
