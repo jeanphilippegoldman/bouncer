@@ -38,7 +38,7 @@
 			this.hasScored = false
 			this.sleep = false
 			this.jumpOrangeProb = 0
-			this.jumpRedProb = 0.2
+			this.jumpRedProb = 0
 			this.jumpBlackProb = 0
 			this.tricks = 4,
 			this.started = 0
@@ -50,7 +50,7 @@
 			stars = []
 			updateGame();
 			this.score = 0;
-			this.level = 7;
+			this.level = 0;
 			this.splash(1)
 			this.time = 0;
 			papis[0].toPlay()
