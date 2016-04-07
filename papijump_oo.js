@@ -1,4 +1,118 @@
 var timer
+
+//ES6
+class Sprite {
+	constructor(w,h,sx,sy,x,y,gy,col,frictionX) {
+		//init
+		this.width = w;
+		this.height = h;
+		this.speedX = sx;
+		this.speedY = sy;    
+		this.x = x;
+		this.y = y;
+		this.gravityY = gy;
+		this.gravityX = 0;
+		this.color = col;
+		this.lastBounce = 0;
+		this.comment="";
+		this.frictionX = (typeof frictionX == 'undefined')? 0.05 : frictionX
+		this.frictionY = 0;
+		this.age = 0
+		this.active = 1
+	}
+	
+	update() {
+		//new position
+		this.speedX = (this.speedX + this.gravityX) * (1 - this.frictionX)
+		this.speedY = (this.speedY + this.gravityY) * (1 - this.frictionY)
+		this.x = (this.x + this.speedX) % game.canvas.width;
+		this.x += this.x<0 ? game.canvas.width : 0
+		this.y += this.speedY;
+		this.age += 1 
+		this.draw()
+	}
+	draw() {
+		game.context.fillStyle = this.color;
+		game.context.font = "20px Impact";
+		game.context.textAlign="center";
+		game.context.fillText(this.comment,this.x +this.width*0.5 ,this.y -5); 
+	}
+		
+	collision(other) {
+		if (((this.y + this.height) < other.y) 
+			|| (this.y > (other.y + other.height))
+			|| ((this.x + this.width) < other.x)
+			|| (this.x > (other.x + other.width))) return false;
+		else return true;
+	}
+}
+
+class Papi extends Sprite {
+	update(){
+		super.update()
+		if (this.y > game.canvas.height - this.height) game.looseOne()
+		//deflate
+		if (papis[0].height > 30)
+			papis[0].height -= 0.01
+		if (papis[0].width > 30)
+			papis[0].width -= 0.01
+		this.draw()
+	}
+
+	draw(){
+		super.draw()
+		//game.context.beginPath();
+		//game.context.arc(this.x+this.width/2,this.y+this.height/2, this.height / 2.0 , 0, 2 * Math.PI, false);
+		//game.context.fill();
+		roundRect(game.context,this.x, this.y, this.width, this.height, 10, true, true);
+		
+		game.context.fillStyle = "black";
+		game.context.fillRect(this.x+this.width*0.3, this.y+this.height*0.3, this.width*0.1, this.height*0.3);
+		game.context.fillRect(this.x+this.width*0.6, this.y+this.height*0.3, this.width*0.1, this.height*0.3);
+		game.context.fillRect(this.x+this.width*0.2, this.y+this.height*0.7, this.width*0.6, this.height*0.1);
+	}
+
+	// transform a waiting papi into a playing papi
+	toPlay() {
+		this.height = 30
+		this.width = 30
+		this.speedX = -10
+		this.speedY = 0
+		this.gravityY = 0.1
+	}
+}
+
+class Board extends Sprite {
+	draw(){
+		super.draw()
+		game.context.fillRect(this.x, this.y, this.width, this.height);
+	}
+}
+
+class Balloon extends Sprite {
+	constructor(){
+		super()
+		this.value = 1
+		this.frictionX = 0.00105
+		this.frictionY = 0.00105
+	}
+	update(){
+		super.update()
+		this.gravityY = -0.05*(this.y/game.canvas.height-0.5)
+		this.comment = "+"+this.value.toString()
+		// this.comment = this.age.toString()
+		if (this.y > game.canvas.height - this.height)  this.active = 0
+		// if a star is old , disactivate
+		if (this.age > 1000) this.active = 0
+	}
+	draw(){
+		super.draw()
+		game.context.fillRect(this.x, this.y, this.width, this.height);
+	}
+}
+
+	
+	
 var game = {
 	//TODO add new sounds for special tricks
 	//TODO remove completely papi when loosing
@@ -38,9 +152,9 @@ var game = {
 		this.level = 1;
 		this.time = 0;
 		papis = [];
-		papis.push( new sprite("papi", 15, 15, 0, 0, 330, 20, 0, "red"));
-		papis.push( new sprite("papi", 15, 15, 0, 0, 350, 20, 0, "red"));
-		papis.push( new sprite("papi", 15, 15, 0, 0, 370, 20, 0, "red"));
+		papis.push( new Papi(15, 15, 0, 0, 330, 20, 0, "red"));
+		papis.push( new Papi(15, 15, 0, 0, 350, 20, 0, "red"));
+		papis.push( new Papi(15, 15, 0, 0, 370, 20, 0, "red"));
 		jumps = [];
 		stars = []
 		updateGame();
@@ -155,105 +269,6 @@ function splashComment(comment,color,width){
 	game.context.fillStyle = color;
 	game.context.fillRect(game.canvas.width * 0.5-width/2, game.canvas.height * 0.6, width, 15);
 }
-function sprite(type,w,h,sx,sy,x,y,gy,col,frictionX) {
-
-	//init
-	this.type = type;
-	this.width = w;
-	this.height = h;
-	this.speedX = sx;
-	this.speedY = sy;    
-	this.x = x;
-	this.y = y;
-	this.gravityY = gy;
-	this.gravityX = 0;
-	this.color = col;
-	this.lastBounce = 0;
-	this.comment="";
-	this.frictionX = (frictionX == undefined)? 0.05 : frictionX
-	this.frictionY = 0;
-	this.age = 0
-	this.active = 1
-	if (this.type=="star") {
-		this.value = 1
-		this.frictionX = 0.00105
-		this.frictionY = 0.00105
-		}
-
-	//newposition then draw
-	this.update = function() {
-		
-		//new position
-		this.speedX = (this.speedX + this.gravityX) * (1 - this.frictionX)
-		this.speedY = (this.speedY + this.gravityY) * (1 - this.frictionY)
-		this.x = (this.x + this.speedX) % game.canvas.width;
-		this.x += this.x<0 ? game.canvas.width : 0
-		this.y += this.speedY;
-		this.age += 1 
-		//this.comment = this.lastBounce.toString()
-		if (this.type == "papi") {
-			if (this.y > game.canvas.height - this.height) game.looseOne()
-			//deflate
-			if (papis[0].height > 30)
-				papis[0].height -= 0.01
-			if (papis[0].width > 30)
-				papis[0].width -= 0.01
-		}
-		if (this.type =="star") {
-			this.gravityY = -0.05*(this.y/game.canvas.height-0.5)
-			this.comment = "+"+this.value.toString()
-			// this.comment = this.age.toString()
-			if (this.y > game.canvas.height - this.height)  this.active = 0
-			// if a star is old , disactivate
-			if (this.age > 1000) this.active = 0
-		}
-		
-		//draw
-		game.context.fillStyle = this.color;
-		if (type == "papi") {
-			game.context.beginPath();
-			game.context.arc(this.x+this.width/2,this.y+this.height/2, this.height / 2.0 , 0, 2 * Math.PI, false);
-			game.context.fill();
-			game.context.fillStyle = "black";
-			game.context.fillRect(this.x+this.width*0.3, this.y+this.height*0.3, this.width*0.1, this.height*0.3);
-			game.context.fillRect(this.x+this.width*0.6, this.y+this.height*0.3, this.width*0.1, this.height*0.3);
-			game.context.fillRect(this.x+this.width*0.2, this.y+this.height*0.7, this.width*0.6, this.height*0.1);
-		} else if(type == "star"){
-			//game.context.save(); 
-			//game.context.translate(this.x, this.y);
-			//game.context.rotate(angle /180 * Math.PI);
-			// game.context.drawImage(img_star, this.x, this.y );
-			//game.context.drawImage(img_star, -(img_star.width/2), -(img_star.height/2));
-			//game.context.restore(); 
-			game.context.fillRect(this.x, this.y, this.width, this.height);
-		}
-		else
-			game.context.fillRect(this.x, this.y, this.width, this.height);
-		
-		//this.comment = this.width.toString()+"  ("+jumpMinWidth.toString()+" ; "+jumpMaxWidth.toString()+" )"
-		game.context.font = "20px Impact";
-		game.context.textAlign="center";
-		game.context.fillText(this.comment,this.x +this.width*0.5 ,this.y -5); 
-			
-	}
-
-	// transform a waiting papi into a playing papi
-	this.toPlay = function() {
-		this.height = 30
-		this.width = 30
-		this.speedX = -10
-		this.speedY = 0
-		this.gravityY = 0.1
-	}
-		
-	this.collision = function(other) {
-		if (((this.y + this.height) < other.y) 
-			|| (this.y > (other.y + other.height))
-			|| ((this.x + this.width) < other.x)
-			|| (this.x > (other.x + other.width))) return false;
-		else return true;
-	}
-}
 	
 var jumpMaxWidth = 60;
 var jumpMinWidth = 40;
@@ -270,16 +285,16 @@ function spawnJump(height) {
 			jumpMinWidth);
 	jumpPos = Math.floor(Math.random() * (game.canvas.width - jumpWidth+1));
 	if (Math.random() < game.jumpOrangeProb)
-		jumps.push(new sprite("jump", jumpWidth, 10, speedX, 1.8 * speed, jumpPos, height, 0,
+		jumps.push(new Board(jumpWidth, 10, speedX, 1.8 * speed, jumpPos, height, 0,
 			"orange",0));
 	else if (Math.random() < game.jumpRedProb)
-		jumps.push(new sprite("jump", jumpWidth, 10, speedX, 2.5 * speed, jumpPos, height, 0,
+		jumps.push(new Board(jumpWidth, 10, speedX, 2.5 * speed, jumpPos, height, 0,
 			"red",0));
 	else if (Math.random() < game.jumpBlackProb)
-		jumps.push(new sprite("jump", jumpWidth, 10, speedX, 2.5 * speed, jumpPos, height, 0,
+		jumps.push(new Board(jumpWidth, 10, speedX, 2.5 * speed, jumpPos, height, 0,
 			"black",0));
 	else
-		jumps.push(new sprite("jump", jumpWidth, 10, speedX, 1.5 * speed , jumpPos, height, 0,
+		jumps.push(new Board(jumpWidth, 10, speedX, 1.5 * speed , jumpPos, height, 0,
 			"green",0));
 }
 
@@ -315,7 +330,7 @@ function updateGame() {
 					sound_stretch.play()
 				} else if (Math.random() < 1/(game.tricks-1)) {
 					//STAR
-					stars.push(new sprite("star", 15, 15, 2*Math.random()-1, 2*Math.random() , 200, 50, 0.02,"yellow"));
+					stars.push(new Balloon(15, 15, 2*Math.random()-1, 2*Math.random() , 200, 50, 0.02,"yellow"));
 					sound_balloon.play()
 				} else  if (Math.random() < 1/(game.tricks-1)) {
 					//FALLING Boards
@@ -323,7 +338,7 @@ function updateGame() {
 					sound_fall.play()
 				} else if (Math.random() < 1/(game.tricks-1)) {
 					//RED STAR
-					stars.push(new sprite("star", 15, 15, 2*Math.random()-1, 2*Math.random() , 200, 50, 0.02,"red"));
+					stars.push(new Balloon(15, 15, 2*Math.random()-1, 2*Math.random() , 200, 50, 0.02,"red"));
 					sound_balloon.play()
 				} else  {
 					//MOVING Boards
@@ -348,7 +363,7 @@ function updateGame() {
 			stars[i].lastBounce = game.time
 			if (stars[i].color=="red"){
 				stars[i].active=0
-				papis.push( new sprite("papi", 15, 15, 0, 0, 330, 20, 0, "red"));
+				papis.push( new Papi(15, 15, 0, 0, 330, 20, 0, "red"));
 				sound_balloon.play()				
 			} else {
 				stars[i].speedX = 0.5+Math.random()
