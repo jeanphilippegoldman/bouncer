@@ -1,6 +1,5 @@
 //power of ES6 :)
 //TODO pause mode
-//TODO dont miss level upgrade if scores 2*Math
 //TODO big papi scores twice
 // TODO big papi deflates quicker
 // TODO yellow balloon is thrown horizontally from red board
@@ -160,12 +159,12 @@ var game = {
 		this.hasScored = false
 		this.sleep = false
 		this.jumpOrangeProb = 0
-		this.jumpRedProb = 0
+		this.jumpRedProb = 0.7
 		this.jumpBlackProb = 0
 		this.started = 0
 		this.score = 0;
 		this.tricks = 0
-		this.level = 1;
+		this.level = 3;
 		this.time = 0;
 		papis = [];
 		papis.push( new Papi(15, 15, 0, 0, 330, 20, 0, "red"));
@@ -175,7 +174,7 @@ var game = {
 		stars = []
 		updateGame();
 		papis[0].toPlay()
-		sound_start.play()
+		myPlay(sound_start)
 		this.boardSpawner(100);
 		this.boardSpawner(150);
 		this.boardSpawner(200);
@@ -255,7 +254,7 @@ var game = {
 	loose : function(){
 		clearInterval(timer)
 		this.clear()
-		sound_loose.play()
+		myPlay(sound_loose)
 		started = 0
 		if (this.score > this.bestScore) this.bestScore = this.score;
 		this.initGame()
@@ -266,7 +265,7 @@ var game = {
 			this.loose()
 		}
 		papis[0].toPlay();
-		sound_loose1.play()
+		myPlay(sound_loose1)
 	},
 	startPapiJump :	function () {
 		this.initArea();
@@ -312,22 +311,26 @@ function splashComment(comment,color,width){
 var boardMaxWidth = 60;
 var boardMinWidth = 40;
 
+function myPlay(snd){
+	if (snd.ended)
+		snd.play()
+	else
+		snd.cloneNode(true).play()
+}
+
 function updateGame() {
 
 
 	//process collisions
 	for (i = 0; i < jumps.length; i += 1) {
-		if (papis[0].collision(jumps[i]) && (game.time - jumps[i].lastBounce > 20 )) {
+		if (papis[0].collision(jumps[i]) && (game.time - jumps[i].lastBounce > 30 )) {
 			jumps[i].lastBounce = game.time
 			if (game.fallingBoards>0) jumps[i].gravityY=0.1
 			if (jumps[i].color == "black") game.looseOne()
 			else if (jumps[i].color == "orange") {
 				papis[0].speedY = -4 -3*(papis[0].y/game.canvas.height)
 				game.addScore(2)
-				if (sound_bounce1.ended)
-					sound_bounce1.play()
-				else
-					sound_bounce1.cloneNode(true).play()
+				myPlay(sound_bounce1)
 			} else if (jumps[i].color == "red") {
 				papis[0].speedY = -2 -3*(papis[0].y/game.canvas.height)
 				game.addScore(1)
@@ -336,36 +339,33 @@ function updateGame() {
 					//BIG PAPI
 					papis[0].height = 70
 					papis[0].width = 70
-					sound_inflate.play()
+					myPlay(sound_inflate)
 				} else if (Math.random() < 1/(game.tricks-1)) {
 					//BIG JUMP BOARDS
 					boardMinWidth = 200
 					boardMaxWidth = 300
-					sound_stretch.play()
+					myPlay(sound_stretch)
 				} else if (Math.random() < 1/(game.tricks-1)) {
 					//STAR
 					stars.push(new Balloon(15, 15, 2*Math.random()-1, 2*Math.random() , 200, 50, 0.02,"yellow"));
-					sound_balloon.play()
+					myPlay(sound_balloon)
 				} else  if (Math.random() < 1/(game.tricks-1)) {
 					//FALLING Boards
 					game.fallingBoards = 500
-					sound_fall.play()
+					myPlay(sound_fall)
 				} else if (Math.random() < 1/(game.tricks-1)) {
 					//RED STAR
 					stars.push(new Balloon(15, 15, 2*Math.random()-1, 2*Math.random() , 200, 50, 0.02,"red"));
-					sound_balloon.play()
+					myPlay(sound_balloon)
 				} else  {
 					//MOVING Boards
 					game.movingBoards = 1000
-					sound_fall.play()
+					myPlay(sound_fall)
 				}
 			} else {
 				papis[0].speedY = -2 -3*(papis[0].y/game.canvas.height)
 				game.addScore(1)
-				if (sound_bounce.ended)
-					sound_bounce.play()
-				else
-					sound_bounce.cloneNode(true).play()
+				myPlay(sound_bounce)
 				// TODO: set up a setter
 				// add special things after levels
 			}
@@ -378,11 +378,12 @@ function updateGame() {
 			if (stars[i].color=="red"){
 				stars[i].active=0
 				papis.push( new Papi(15, 15, 0, 0, 330, 20, 0, "red"));
-				sound_balloon.play()				
+				myPlay(sound_balloon)				
+				myPlay(sound_balloon)				
 			} else {
 				stars[i].speedX = 0.5+Math.random()
 				stars[i].speedY = 0.5+Math.random()
-				sound_balloon.play()				
+				myPlay(sound_balloon)				
 				game.score += stars[i].value
 				stars[i].value += 1
 				// remove star after 5 touches
