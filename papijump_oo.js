@@ -1,6 +1,11 @@
-var timer
+//power of ES6 :)
+//TODO pause mode
+//TODO dont miss level upgrade if scores 2*Math
+//TODO big papi scores twice
+// TODO big papi deflates quicker
+// TODO yellow balloon is thrown horizontally from red board
+// TODO fallingBoards sound does movingBoards
 
-//ES6
 class Sprite {
 	constructor(w,h,sx,sy,x,y,gy,col,frictionX) {
 		//init
@@ -17,8 +22,8 @@ class Sprite {
 		this.comment="";
 		this.frictionX = (typeof frictionX == 'undefined')? 0.05 : frictionX
 		this.frictionY = 0;
-		this.age = 0
-		this.active = 1
+		// new papis are sleeping = 0 (dead=-1).balloons starts as active
+		this.active = 0
 	}
 	
 	update() {
@@ -28,8 +33,6 @@ class Sprite {
 		this.x = (this.x + this.speedX) % game.canvas.width;
 		this.x += this.x<0 ? game.canvas.width : 0
 		this.y += this.speedY;
-		this.age += 1 
-		this.draw()
 	}
 	draw() {
 		game.context.fillStyle = this.color;
@@ -50,21 +53,25 @@ class Sprite {
 class Papi extends Sprite {
 	update(){
 		super.update()
-		if (this.y > game.canvas.height - this.height) game.looseOne()
-		//deflate
-		if (papis[0].height > 30)
-			papis[0].height -= 0.01
-		if (papis[0].width > 30)
-			papis[0].width -= 0.01
+		if (this.active == 1){
+			if (this.y > game.canvas.height - this.height) game.looseOne(this)
+			//deflate
+			if (this.height > 30)
+				this.height -= 0.01
+			if (this.width > 30)
+				this.width -= 0.01
+		}
 		this.draw()
 	}
 
 	draw(){
 		super.draw()
-		//game.context.beginPath();
-		//game.context.arc(this.x+this.width/2,this.y+this.height/2, this.height / 2.0 , 0, 2 * Math.PI, false);
-		//game.context.fill();
-		roundRect(game.context,this.x, this.y, this.width, this.height, 10, true, true);
+		if (this.active == 0) {
+			game.context.beginPath();
+			game.context.arc(this.x+this.width/2,this.y+this.height/2, this.height / 2.0 , 0, 2 * Math.PI, false);
+			game.context.fill();
+		} else if (this.active == 1) 
+			roundRect(game.context,this.x, this.y, this.width, this.height, 10, true, true);
 		
 		game.context.fillStyle = "black";
 		game.context.fillRect(this.x+this.width*0.3, this.y+this.height*0.3, this.width*0.1, this.height*0.3);
@@ -74,6 +81,7 @@ class Papi extends Sprite {
 
 	// transform a waiting papi into a playing papi
 	toPlay() {
+		this.active = 1
 		this.height = 30
 		this.width = 30
 		this.speedX = -10
@@ -83,27 +91,36 @@ class Papi extends Sprite {
 }
 
 class Board extends Sprite {
+	update(){
+		super.update()
+		this.draw()
+	}
 	draw(){
 		super.draw()
 		game.context.fillRect(this.x, this.y, this.width, this.height);
 	}
+	
 }
 
 class Balloon extends Sprite {
-	constructor(){
-		super()
+	constructor(w,h,sx,sy,x,y,gy,col,frictionX){
+		super(w,h,sx,sy,x,y,gy,col,frictionX)
 		this.value = 1
 		this.frictionX = 0.00105
 		this.frictionY = 0.00105
+		this.age = 0
+		this.active = 1
 	}
 	update(){
 		super.update()
+		this.age += 1 
 		this.gravityY = -0.05*(this.y/game.canvas.height-0.5)
 		this.comment = "+"+this.value.toString()
-		// this.comment = this.age.toString()
+		//this.comment = this.age.toString()
 		if (this.y > game.canvas.height - this.height)  this.active = 0
 		// if a star is old , disactivate
 		if (this.age > 1000) this.active = 0
+		this.draw()
 	}
 	draw(){
 		super.draw()
@@ -112,7 +129,7 @@ class Balloon extends Sprite {
 }
 
 	
-	
+var timer
 var game = {
 	//TODO add new sounds for special tricks
 	//TODO remove completely papi when loosing
@@ -136,7 +153,6 @@ var game = {
 		sound_balloon = document.getElementById("sound_balloon");
 		sound_stretch = document.getElementById("sound_stretch");
 		sound_fall = document.getElementById("sound_fall");
-		img_star = document.getElementById("star");
 	},
 	initGame : function() {
 		this.fallingBoards = 0,
@@ -146,9 +162,9 @@ var game = {
 		this.jumpOrangeProb = 0
 		this.jumpRedProb = 0
 		this.jumpBlackProb = 0
-		this.tricks = 0
 		this.started = 0
 		this.score = 0;
+		this.tricks = 0
 		this.level = 1;
 		this.time = 0;
 		papis = [];
@@ -160,10 +176,10 @@ var game = {
 		updateGame();
 		papis[0].toPlay()
 		sound_start.play()
-		spawnJump(100);
-		spawnJump(150);
-		spawnJump(200);
-		spawnJump(250);
+		this.boardSpawner(100);
+		this.boardSpawner(150);
+		this.boardSpawner(200);
+		this.boardSpawner(250);
 		this.splash(1)
 	
 	},
@@ -211,9 +227,6 @@ var game = {
 			//NEXT TRICKS
 			// get booster
 			// red balloon = new life
-			
-				
-				
 		}
 		this.sleep = true
 		setTimeout("game.sleep=false;",1000)
@@ -247,7 +260,7 @@ var game = {
 		if (this.score > this.bestScore) this.bestScore = this.score;
 		this.initGame()
 	},
-	looseOne : function() {
+	looseOne : function(deadPapi) {
 		papis.shift();
 		if (papis.length == 0) {
 			this.loose()
@@ -259,6 +272,32 @@ var game = {
 		this.initArea();
 		this.initGame();
 		
+	},
+	boardSpawner : function(height) {
+		
+		if (game.boardMinWidth > 40)
+			boardMinWidth -= 10;
+		if (boardMaxWidth > 60)
+			boardMaxWidth -= 10;
+		
+		//boards fall faster and faster with score
+		speed = Math.log(game.score + 1)/15 + 1
+		speedX = (game.movingBoards>0)? 10*(Math.random()-0.5) : 0
+		boardWidth = Math.floor(Math.random()*(boardMaxWidth - boardMinWidth + 1) +
+				boardMinWidth);
+		jumpPos = Math.floor(Math.random() * (game.canvas.width - boardWidth+1));
+		if (Math.random() < game.jumpOrangeProb)
+			jumps.push(new Board(boardWidth, 10, speedX, 1.8 * speed, jumpPos, height, 0,
+				"orange",0));
+		else if (Math.random() < game.jumpRedProb)
+			jumps.push(new Board(boardWidth, 10, speedX, 2.5 * speed, jumpPos, height, 0,
+				"red",0));
+		else if (Math.random() < game.jumpBlackProb)
+			jumps.push(new Board(boardWidth, 10, speedX, 2.5 * speed, jumpPos, height, 0,
+				"black",0));
+		else
+			jumps.push(new Board(boardWidth, 10, speedX, 1.5 * speed , jumpPos, height, 0,
+				"green",0));
 	}
 }
 
@@ -270,33 +309,8 @@ function splashComment(comment,color,width){
 	game.context.fillRect(game.canvas.width * 0.5-width/2, game.canvas.height * 0.6, width, 15);
 }
 	
-var jumpMaxWidth = 60;
-var jumpMinWidth = 40;
-
-function spawnJump(height) {
-	if (jumpMinWidth > 40)
-		jumpMinWidth -= 10;
-	if (jumpMaxWidth > 60)
-		jumpMaxWidth -= 10;
-	//boards fall faster and faster with score
-	speed = Math.log(game.score + 1)/15 + 1
-	speedX = (game.movingBoards>0)? 10*(Math.random()-0.5) : 0
-	jumpWidth = Math.floor(Math.random()*(jumpMaxWidth - jumpMinWidth + 1) +
-			jumpMinWidth);
-	jumpPos = Math.floor(Math.random() * (game.canvas.width - jumpWidth+1));
-	if (Math.random() < game.jumpOrangeProb)
-		jumps.push(new Board(jumpWidth, 10, speedX, 1.8 * speed, jumpPos, height, 0,
-			"orange",0));
-	else if (Math.random() < game.jumpRedProb)
-		jumps.push(new Board(jumpWidth, 10, speedX, 2.5 * speed, jumpPos, height, 0,
-			"red",0));
-	else if (Math.random() < game.jumpBlackProb)
-		jumps.push(new Board(jumpWidth, 10, speedX, 2.5 * speed, jumpPos, height, 0,
-			"black",0));
-	else
-		jumps.push(new Board(jumpWidth, 10, speedX, 1.5 * speed , jumpPos, height, 0,
-			"green",0));
-}
+var boardMaxWidth = 60;
+var boardMinWidth = 40;
 
 function updateGame() {
 
@@ -325,8 +339,8 @@ function updateGame() {
 					sound_inflate.play()
 				} else if (Math.random() < 1/(game.tricks-1)) {
 					//BIG JUMP BOARDS
-					jumpMinWidth = 200
-					jumpMaxWidth = 300
+					boardMinWidth = 200
+					boardMaxWidth = 300
 					sound_stretch.play()
 				} else if (Math.random() < 1/(game.tricks-1)) {
 					//STAR
@@ -384,14 +398,15 @@ function updateGame() {
 	for (i = 0; i < jumps.length; i += 1) jumps[i].update();
 	
 	//every 50 ticks, spawn a new jump board
-	if (game.time == 1 || ((game.time / 50) % 1 == 0)) spawnJump(50)
+	if (game.time == 1 || ((game.time / 50) % 1 == 0)) game.boardSpawner(50)
 	
 	for (i = 0; i < papis.length; i += 1) papis[i].update();
 	for (i = 0; i < stars.length; i += 1) if (stars[i].active) stars[i].update();
 	game.scoreZone();
 	
-	if (game.hasScored &&(game.score>0)&&(game.score % 25 == 0)) {
-		game.level +=1
+	var newLevel = Math.ceil((game.score+1)/25)
+	if (newLevel > game.level) {
+		game.level = newLevel
 		game.splash(game.level)
 	}
 }
