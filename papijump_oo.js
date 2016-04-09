@@ -322,6 +322,7 @@ function myPlay(snd){
 function updateGame() {
 
 
+	rebound = (game.fallingBoards>0)? -4 : -2
 	//process collisions
 	for (i = 0; i < jumps.length; i += 1) {
 		if (papis[0].collision(jumps[i]) && (game.time - jumps[i].lastBounce > 30 )) {
@@ -329,11 +330,11 @@ function updateGame() {
 			if (game.fallingBoards>0) jumps[i].gravityY=0.1
 			if (jumps[i].color == "black") game.looseOne()
 			else if (jumps[i].color == "orange") {
-				papis[0].speedY = -4 -3*(papis[0].y/game.canvas.height)
+				papis[0].speedY = rebound -2 -3*(papis[0].y/game.canvas.height)
 				game.addScore(2)
 				myPlay(sound_bounce1)
 			} else if (jumps[i].color == "red") {
-				papis[0].speedY = -2 -3*(papis[0].y/game.canvas.height)
+				papis[0].speedY = rebound -3*(papis[0].y/game.canvas.height)
 				game.addScore(1)
 				jumps[i].color = "orange"
 				if (Math.random() < 1/game.tricks) {
@@ -364,7 +365,7 @@ function updateGame() {
 					myPlay(sound_fall)
 				}
 			} else {
-				papis[0].speedY = -2 -3*(papis[0].y/game.canvas.height)
+				papis[0].speedY = rebound -3*(papis[0].y/game.canvas.height)
 				game.addScore(1)
 				myPlay(sound_bounce)
 				// TODO: set up a setter
