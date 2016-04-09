@@ -2,7 +2,6 @@
 // TODO pause mode
 // TODO fallingBoards sound does movingBoards
 // TODO trick: steady block
-// TODO initgame : init movingBoards, fallingBoards, boardMinWidth, boardMaxWidth
 // get high jumps when falling board
 // moving boards tends to disappear on sides
 // make a debug mode
@@ -280,15 +279,15 @@ var game = {
 		
 		if (game.boardMinWidth > 40)
 			game.boardMinWidth -= 10;
-		if (boardMaxWidth > 60)
+		if (game.boardMaxWidth > 60)
 			game.boardMaxWidth -= 10;
 		
 		//boards fall faster and faster with score
 		speed = Math.log(game.score + 1)/15 + 1
 		speedX = (game.movingBoards>0)? 10*(Math.random()-0.5) : 0
-		boardWidth = Math.floor(Math.random()*(boardMaxWidth - boardMinWidth + 1) +
-				boardMinWidth);
-		jumpPos = Math.floor(Math.random() * (game.canvas.width - boardWidth+1));
+		boardWidth = Math.floor(Math.random()*(game.boardMaxWidth - game.boardMinWidth + 1) +
+				game.boardMinWidth);
+		jumpPos = Math.floor(Math.random() * (game.canvas.width - game.boardWidth+1));
 		if (Math.random() < game.jumpOrangeProb)
 			jumps.push(new Board(boardWidth, 10, speedX, 1.8 * speed, jumpPos, height, 0,
 				"orange",0));
@@ -323,17 +322,18 @@ function updateGame() {
 
 
 	//process collisions
+	rebound = game.fallingBoards>0? -4 : -2
 	for (i = 0; i < jumps.length; i += 1) {
 		if (papis[0].collision(jumps[i]) && (game.time - jumps[i].lastBounce > 30 )) {
 			jumps[i].lastBounce = game.time
 			if (game.fallingBoards>0) jumps[i].gravityY=0.1
 			if (jumps[i].color == "black") game.looseOne()
 			else if (jumps[i].color == "orange") {
-				papis[0].speedY = -4 -3*(papis[0].y/game.canvas.height)
+				papis[0].speedY = rebound -2 -3*(papis[0].y/game.canvas.height)
 				game.addScore(2)
 				myPlay(sound_bounce1)
 			} else if (jumps[i].color == "red") {
-				papis[0].speedY = -2 -3*(papis[0].y/game.canvas.height)
+				papis[0].speedY = rebound -3*(papis[0].y/game.canvas.height)
 				game.addScore(1)
 				jumps[i].color = "orange"
 				if (Math.random() < 1/game.tricks) {
@@ -343,8 +343,8 @@ function updateGame() {
 					myPlay(sound_inflate)
 				} else if (Math.random() < 1/(game.tricks-1)) {
 					//BIG JUMP BOARDS
-					boardMinWidth = 200
-					boardMaxWidth = 300
+					game.boardMinWidth = 200
+					game.boardMaxWidth = 300
 					myPlay(sound_stretch)
 				} else if (Math.random() < 1/(game.tricks-1)) {
 					//STAR
@@ -364,7 +364,7 @@ function updateGame() {
 					myPlay(sound_fall)
 				}
 			} else {
-				papis[0].speedY = -2 -3*(papis[0].y/game.canvas.height)
+				papis[0].speedY = rebound -3*(papis[0].y/game.canvas.height)
 				game.addScore(1)
 				myPlay(sound_bounce)
 				// TODO: set up a setter
