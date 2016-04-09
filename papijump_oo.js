@@ -1,6 +1,5 @@
 //power of ES6 :)
 // TODO pause mode
-// TODO yellow balloon is thrown horizontally from red board
 // TODO fallingBoards sound does movingBoards
 // TODO trick: steady block
 // TODO initgame : init movingBoards, fallingBoards, boardMinWidth, boardMaxWidth
@@ -159,6 +158,8 @@ var game = {
 	initGame : function() {
 		this.fallingBoards = 0,
 		this.movingBoards= 0,
+		this.boardMaxWidth = 60;
+		this.boardMinWidth = 40;
 		this.hasScored = false
 		this.sleep = false
 		this.jumpOrangeProb = 0
@@ -278,9 +279,9 @@ var game = {
 	boardSpawner : function(height) {
 		
 		if (game.boardMinWidth > 40)
-			boardMinWidth -= 10;
+			game.boardMinWidth -= 10;
 		if (boardMaxWidth > 60)
-			boardMaxWidth -= 10;
+			game.boardMaxWidth -= 10;
 		
 		//boards fall faster and faster with score
 		speed = Math.log(game.score + 1)/15 + 1
@@ -311,9 +312,6 @@ function splashComment(comment,color,width){
 	game.context.fillRect(game.canvas.width * 0.5-width/2, game.canvas.height * 0.6, width, 15);
 }
 	
-var boardMaxWidth = 60;
-var boardMinWidth = 40;
-
 function myPlay(snd){
 	if (snd.ended)
 		snd.play()
