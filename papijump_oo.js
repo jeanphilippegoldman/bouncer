@@ -280,14 +280,14 @@ var game = {
 		
 		if (game.boardMinWidth > 40)
 			game.boardMinWidth -= 10;
-		if (boardMaxWidth > 60)
+		if (game.boardMaxWidth > 60)
 			game.boardMaxWidth -= 10;
 		
 		//boards fall faster and faster with score
 		speed = Math.log(game.score + 1)/15 + 1
 		speedX = (game.movingBoards>0)? 10*(Math.random()-0.5) : 0
-		boardWidth = Math.floor(Math.random()*(boardMaxWidth - boardMinWidth + 1) +
-				boardMinWidth);
+		boardWidth = Math.floor(Math.random()*(game.boardMaxWidth - game.boardMinWidth + 1) +
+				game.boardMinWidth);
 		jumpPos = Math.floor(Math.random() * (game.canvas.width - boardWidth+1));
 		if (Math.random() < game.jumpOrangeProb)
 			jumps.push(new Board(boardWidth, 10, speedX, 1.8 * speed, jumpPos, height, 0,
@@ -343,8 +343,8 @@ function updateGame() {
 					myPlay(sound_inflate)
 				} else if (Math.random() < 1/(game.tricks-1)) {
 					//BIG JUMP BOARDS
-					boardMinWidth = 200
-					boardMaxWidth = 300
+					game.boardMinWidth = 200
+					game.boardMaxWidth = 300
 					myPlay(sound_stretch)
 				} else if (Math.random() < 1/(game.tricks-1)) {
 					//STAR
