@@ -162,12 +162,12 @@ var game = {
 		this.hasScored = false
 		this.sleep = false
 		this.jumpOrangeProb = 0
-		this.jumpRedProb = 0
+		this.jumpRedProb = 0.5
 		this.jumpBlackProb = 0
 		this.started = 0
 		this.score = 0;
-		this.tricks = 0
-		this.level = 1;
+		this.tricks = 10
+		this.level = 10;
 		this.time = 0;
 		papis = [];
 		papis.push( new Papi(15, 15, 0, 0, 330, 20, 0, "#2E9AFE"));
@@ -350,7 +350,7 @@ function updateGame() {
 					myPlay(sound_stretch)
 				} else if (Math.random() < 1/(game.tricks-1)) {
 					//STAR
-					stars.push(new Balloon(15, 15, 2*Math.random()-1, 2*Math.random() , 200, 50, 0.02,"yellow"));
+					stars.push(new Balloon(15, 15, 2*Math.random()-1, 0 , jumps[i].x+jumps[i].width/2, jumps[i].y, 0.02,"yellow"));
 					myPlay(sound_balloon)
 				} else  if (Math.random() < 1/(game.tricks-1)) {
 					//FALLING Boards
