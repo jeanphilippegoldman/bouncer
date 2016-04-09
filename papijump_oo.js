@@ -1,10 +1,16 @@
 //power of ES6 :)
-//TODO pause mode
-//TODO big papi scores twice
-// TODO big papi deflates quicker
+// TODO pause mode
 // TODO yellow balloon is thrown horizontally from red board
 // TODO fallingBoards sound does movingBoards
-
+// TODO trick: steady block
+// TODO initgame : init movingBoards, fallingBoards, boardMinWidth, boardMaxWidth
+// get high jumps when falling board
+// moving boards tends to disappear on sides
+// make a debug mode
+// first slash: user <- -> arrows
+// TODO remove completely papi when loosing
+// TODO papi theme to ???
+// TODO better rebound. i.e side rebound -speedX
 class Sprite {
 	constructor(w,h,sx,sy,x,y,gy,col,frictionX) {
 		//init
@@ -56,9 +62,9 @@ class Papi extends Sprite {
 			if (this.y > game.canvas.height - this.height) game.looseOne(this)
 			//deflate
 			if (this.height > 30)
-				this.height -= 0.01
+				this.height -= 0.06
 			if (this.width > 30)
-				this.width -= 0.01
+				this.width -= 0.06
 		}
 		this.draw()
 	}
@@ -130,9 +136,6 @@ class Balloon extends Sprite {
 	
 var timer
 var game = {
-	//TODO add new sounds for special tricks
-	//TODO remove completely papi when loosing
-	//TODO papi theme to ???
 	
 	canvas : document.createElement("canvas"),
 	bestScore : 0,
@@ -159,17 +162,17 @@ var game = {
 		this.hasScored = false
 		this.sleep = false
 		this.jumpOrangeProb = 0
-		this.jumpRedProb = 0.7
+		this.jumpRedProb = 0
 		this.jumpBlackProb = 0
 		this.started = 0
 		this.score = 0;
 		this.tricks = 0
-		this.level = 3;
+		this.level = 1;
 		this.time = 0;
 		papis = [];
-		papis.push( new Papi(15, 15, 0, 0, 330, 20, 0, "red"));
-		papis.push( new Papi(15, 15, 0, 0, 350, 20, 0, "red"));
-		papis.push( new Papi(15, 15, 0, 0, 370, 20, 0, "red"));
+		papis.push( new Papi(15, 15, 0, 0, 330, 20, 0, "#2E9AFE"));
+		papis.push( new Papi(15, 15, 0, 0, 350, 20, 0, "#2E9AFE"));
+		papis.push( new Papi(15, 15, 0, 0, 370, 20, 0, "#2E9AFE"));
 		jumps = [];
 		stars = []
 		updateGame();
@@ -245,7 +248,7 @@ var game = {
 		game.context.textAlign="start"; 
 		game.context.fillText(this.score.toString(), 10, this.canvas.height * 0.98);
 		game.context.textAlign="end"; 
-		game.context.fillText(this.level.toString(), this.canvas.width * 0.98, this.canvas.height * 0.98);
+		game.context.fillText("lvl "+this.level.toString(), this.canvas.width * 0.98, this.canvas.height * 0.98);
 	},
 	addScore : function (n) {
 		this.score += n
@@ -359,7 +362,7 @@ function updateGame() {
 					myPlay(sound_balloon)
 				} else  {
 					//MOVING Boards
-					game.movingBoards = 1000
+					game.movingBoards = 500
 					myPlay(sound_fall)
 				}
 			} else {
