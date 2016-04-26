@@ -1,6 +1,8 @@
 
 	document.onkeydown = function(e){
 		
+		if ((e.which == 76))
+			game.level += 1 ; 		
 		if ((e.which == 39))
 			papis[0].gravityX = 0.5; 
 		if ((e.which == 37))
