@@ -2,13 +2,17 @@
 // TODO pause mode
 // TODO fallingBoards sound does movingBoards
 // TODO trick: steady block
-// get high jumps when falling board
+// TODO initgame : init movingBoards, fallingBoards, boardMinWidth, boardMaxWidth
 // moving boards tends to disappear on sides
 // make a debug mode
 // first slash: user <- -> arrows
 // TODO remove completely papi when loosing
 // TODO papi theme to ???
 // TODO better rebound. i.e side rebound -speedX
+//TODO multiple papis
+// steady boards 
+// firing upwards to boards or ennemies
+// boosting (arrow down)
 class Sprite {
 	constructor(w,h,sx,sy,x,y,gy,col,frictionX) {
 		//init
@@ -28,7 +32,6 @@ class Sprite {
 		// new papis are sleeping = 0 (dead=-1).balloons starts as active
 		this.active = 0
 	}
-	
 	update() {
 		//new position
 		this.speedX = (this.speedX + this.gravityX) * (1 - this.frictionX)
@@ -321,8 +324,8 @@ function myPlay(snd){
 function updateGame() {
 
 
+	rebound = (game.fallingBoards>0)? -4 : -2
 	//process collisions
-	rebound = game.fallingBoards>0? -4 : -2
 	for (i = 0; i < jumps.length; i += 1) {
 		if (papis[0].collision(jumps[i]) && (game.time - jumps[i].lastBounce > 30 )) {
 			jumps[i].lastBounce = game.time
