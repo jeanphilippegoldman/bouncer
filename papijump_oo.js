@@ -13,6 +13,8 @@
 // steady boards 
 // firing upwards to boards or ennemies
 // boosting (arrow down)
+// L level up
+
 class Sprite {
 	constructor(w,h,sx,sy,x,y,gy,col,frictionX) {
 		//init
@@ -165,12 +167,12 @@ var game = {
 		this.hasScored = false
 		this.sleep = false
 		this.jumpOrangeProb = 0
-		this.jumpRedProb = 0.5
+		this.jumpRedProb = 0
 		this.jumpBlackProb = 0
 		this.started = 0
 		this.score = 0;
-		this.tricks = 10
-		this.level = 10;
+		this.tricks = 0
+		this.level = 1;
 		this.time = 0;
 		papis = [];
 		papis.push( new Papi(15, 15, 0, 0, 330, 20, 0, "#2E9AFE"));
