@@ -3,13 +3,16 @@
 // TODO fallingBoards sound does movingBoards
 // TODO trick: steady block
 // TODO initgame : init movingBoards, fallingBoards, boardMinWidth, boardMaxWidth
-// get high jumps when falling board
 // moving boards tends to disappear on sides
 // make a debug mode
 // first slash: user <- -> arrows
 // TODO remove completely papi when loosing
 // TODO papi theme to ???
 // TODO better rebound. i.e side rebound -speedX
+//TODO multiple papis
+// steady boards 
+// firing upwards to boards or ennemies
+// boosting (arrow down)
 class Sprite {
 	constructor(w,h,sx,sy,x,y,gy,col,frictionX) {
 		//init
