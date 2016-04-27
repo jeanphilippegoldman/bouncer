@@ -8,6 +8,7 @@
 
 // TODO later
 // pause mode
+// L = higher level, speficic function that higher probabilities too and registrer tricks
 // fallingBoards sound does movingBoards
 // make a debug mode
 // first splash: use <- -> arrows
@@ -72,8 +73,10 @@ class Bouncer extends Sprite {
 	update(){
 		super.update()
 		if (this.active == 1){
+			//bottom screen fall > loose one
 			if (this.y > game.canvas.height - this.height) game.looseOne(this)
-			//deflate
+
+				//TRICK_deflate 
 			if (this.height > 30)
 				this.height -= 0.06
 			if (this.width > 30)
@@ -84,7 +87,10 @@ class Bouncer extends Sprite {
 
 	draw(){
 		super.draw()
+		
+		//draw bouncer
 		if (this.active == 0) {
+			//TODO roundRect for sleeping bouncer
 			game.context.beginPath();
 			game.context.arc(this.x+this.width/2,this.y+this.height/2, this.height / 2.0 , 0, 2 * Math.PI, false);
 			game.context.fill();
@@ -92,12 +98,14 @@ class Bouncer extends Sprite {
 			roundRect(game.context,this.x, this.y, this.width, this.height, 10, true, true);
 		
 		game.context.fillStyle = "black";
+		
+		// eyes and nose
 		game.context.fillRect(this.x+this.width*0.3, this.y+this.height*0.3, this.width*0.1, this.height*0.3);
 		game.context.fillRect(this.x+this.width*0.6, this.y+this.height*0.3, this.width*0.1, this.height*0.3);
 		game.context.fillRect(this.x+this.width*0.2, this.y+this.height*0.7, this.width*0.6, this.height*0.1);
 	}
 
-	// transform a waiting Bouncer into a playing Bouncer
+	// transform a waiting Bouncer into a playing Bouncer (give size, speed and gravity)
 	toPlay() {
 		this.active = 1
 		this.height = 30
@@ -108,6 +116,7 @@ class Bouncer extends Sprite {
 	}
 }
 
+// boards to jump on
 class Board extends Sprite {
 	update(){
 		super.update()
@@ -120,6 +129,7 @@ class Board extends Sprite {
 	
 }
 
+// floating balloons (red ones give a life, yellow ones points)
 class Balloon extends Sprite {
 	constructor(w,h,sx,sy,x,y,gy,col,frictionX){
 		super(w,h,sx,sy,x,y,gy,col,frictionX)
@@ -132,11 +142,12 @@ class Balloon extends Sprite {
 	update(){
 		super.update()
 		this.age += 1 
+		//make reverse gravity when approaching bottom
 		this.gravityY = -0.05*(this.y/game.canvas.height-0.5)
 		this.comment = "+"+this.value.toString()
 		//this.comment = this.age.toString()
 		if (this.y > game.canvas.height - this.height)  this.active = 0
-		// if a star is old , disactivate
+		// if a balloon is old , disactivate
 		if (this.age > 1000) this.active = 0
 		this.draw()
 	}
@@ -189,7 +200,7 @@ var game = {
 		bouncers.push( new Bouncer(15, 15, 0, 0, 350, 20, 0, "#2E9AFE"));
 		bouncers.push( new Bouncer(15, 15, 0, 0, 370, 20, 0, "#2E9AFE"));
 		jumps = [];
-		stars = []
+		balloons = []
 		updateGame();
 		bouncers[0].toPlay()
 		myPlay(sound_start)
@@ -364,16 +375,16 @@ function updateGame() {
 					game.boardMaxWidth = 300
 					myPlay(sound_stretch)
 				} else if (Math.random() < 1/(game.tricks-1)) {
-					//STAR
-					stars.push(new Balloon(15, 15, 2*Math.random()-1, 0 , jumps[i].x+jumps[i].width/2, jumps[i].y, 0.02,"yellow"));
+					//TRICK_YELLOW_BALLOON
+					balloons.push(new Balloon(15, 15, 2*Math.random()-1, 0 , jumps[i].x+jumps[i].width/2, jumps[i].y, 0.02,"yellow"));
 					myPlay(sound_balloon)
 				} else  if (Math.random() < 1/(game.tricks-1)) {
 					//FALLING Boards
 					game.fallingBoards = 500
 					myPlay(sound_fall)
 				} else if (Math.random() < 1/(game.tricks-1)) {
-					//RED STAR
-					stars.push(new Balloon(15, 15, 2*Math.random()-1, 2*Math.random() , 200, 50, 0.02,"red"));
+					//TRICK_RED_BALLOON
+					balloons.push(new Balloon(15, 15, 2*Math.random()-1, 2*Math.random() , 200, 50, 0.02,"red"));
 					myPlay(sound_balloon)
 				} else  {
 					//MOVING Boards
@@ -390,22 +401,22 @@ function updateGame() {
 		}
 	}
 
-	for (i = 0; i < stars.length; i += 1) if (stars[i].active) {
-		if (bouncers[0].collision(stars[i]) && (game.time - stars[i].lastBounce > 40 )) {
-			stars[i].lastBounce = game.time
-			if (stars[i].color=="red"){
-				stars[i].active=0
+	for (i = 0; i < balloons.length; i += 1) if (balloons[i].active) {
+		if (bouncers[0].collision(balloons[i]) && (game.time - balloons[i].lastBounce > 40 )) {
+			balloons[i].lastBounce = game.time
+			if (balloons[i].color=="red"){
+				balloons[i].active=0
 				bouncers.push( new Bouncer(15, 15, 0, 0, 330, 20, 0, "red"));
 				myPlay(sound_balloon)				
 				myPlay(sound_balloon)				
 			} else {
-				stars[i].speedX = 0.5+Math.random()
-				stars[i].speedY = 0.5+Math.random()
+				balloons[i].speedX = 0.5+Math.random()
+				balloons[i].speedY = 0.5+Math.random()
 				myPlay(sound_balloon)				
-				game.score += stars[i].value
-				stars[i].value += 1
-				// remove star after 5 touches
-				if (stars[i].value > 5) stars[i].active=0
+				game.score += balloons[i].value
+				balloons[i].value += 1
+				// remove balloon after 5 touches
+				if (balloons[i].value > 5) balloons[i].active=0
 			}
 		}
 	}
@@ -420,7 +431,7 @@ function updateGame() {
 	if (game.time == 1 || ((game.time / 50) % 1 == 0)) game.boardSpawner(50)
 	
 	for (i = 0; i < bouncers.length; i += 1) bouncers[i].update();
-	for (i = 0; i < stars.length; i += 1) if (stars[i].active) stars[i].update();
+	for (i = 0; i < balloons.length; i += 1) if (balloons[i].active) balloons[i].update();
 	game.scoreZone();
 	
 	var newLevel = Math.ceil((game.score+1)/25)
