@@ -1,15 +1,20 @@
 //power of ES6 :)
-// TODO pause mode
-// TODO fallingBoards sound does movingBoards
-// TODO trick: steady block
-// TODO initgame : init movingBoards, fallingBoards, boardMinWidth, boardMaxWidth
-// get high jumps when falling board
+// TODO NOW
 // moving boards tends to disappear on sides
+// remove completely papi when loosing
+// papi theme to ???
+// add comments
+// change code for nice new tricks registering
+
+// TODO later
+// pause mode
+// fallingBoards sound does movingBoards
 // make a debug mode
-// first slash: user <- -> arrows
-// TODO remove completely papi when loosing
-// TODO papi theme to ???
-// TODO better rebound. i.e side rebound -speedX
+// first splash: use <- -> arrows
+// down = booster
+// up = fire
+// steady board
+// multiple papi
 class Sprite {
 	constructor(w,h,sx,sy,x,y,gy,col,frictionX) {
 		//init
@@ -322,7 +327,9 @@ function myPlay(snd){
 function updateGame() {
 
 
+	// get high jumps when falling boards
 	rebound = (game.fallingBoards>0)? -4 : -2
+
 	//process collisions
 	for (i = 0; i < jumps.length; i += 1) {
 		if (papis[0].collision(jumps[i]) && (game.time - jumps[i].lastBounce > 30 )) {

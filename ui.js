@@ -18,3 +18,23 @@
 		if ((e.which == 37))
 			papis[0].gravityX = 0;
 		}
+
+		
+
+		
+// mobile version
+	if(window.DeviceOrientationEvent) {
+		window.addEventListener("deviceorientation", function(event) {
+			gamma = Math.max(Math.min(event.gamma,90),-90)
+			papis[0].gravityX = 0.5 * gamma/45
+		}
+		, false);
+	} else {
+		// Le navigateur ne supporte pas l'événement deviceorientation
+	}
+
+	document.getElementById("gameCanvas").addEventListener('touchstart', function(event) {
+			game.start()
+			}
+		, false);
+		
