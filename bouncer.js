@@ -227,7 +227,7 @@ var game = {
 		game.context.font = "35px Impact";
 		game.context.fillStyle = '#33AA33';
 		if (level==1) {
-			game.context.fillText("bouncer",this.canvas.width * 0.5,this.canvas.height * 0.3); 
+			game.context.fillText("BlueBouncer",this.canvas.width * 0.5,this.canvas.height * 0.3); 
 			game.context.fillText("best "+this.bestScore.toString(),this.canvas.width * 0.5,this.canvas.height * 0.7); 
 		} else {
 			game.context.fillText("Level "+level.toString(),this.canvas.width * 0.5,this.canvas.height * 0.4); 
