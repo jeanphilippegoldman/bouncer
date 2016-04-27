@@ -188,18 +188,18 @@ var game = {
 	},
 	initGame : function() {
 		this.fallingBoards = 0,
-		this.movingBoards= 50000,
+		this.movingBoards= 0,
 		this.boardMaxWidth = 60;
 		this.boardMinWidth = 40;
 		this.hasScored = false
 		this.sleep = false
 		this.boardOrangeProb = 0
-		this.boardRedProb = 0.5
+		this.boardRedProb = 0
 		this.boardBlackProb = 0
 		this.started = 0
 		this.score = 0;
 		this.tricks = 0
-		this.level = 10;
+		this.level = 1;
 		this.time = 0;
 		bouncers = [];
 		bouncers.push( new Bouncer(15, 15, 0, 0, 330, 20, 0, "#2E9AFE"));
