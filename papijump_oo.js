@@ -16,6 +16,7 @@
 // up = fire
 // steady board
 // multiple bouncer
+// game.started usefull ?
 
 
 // general object (extended by bouncers, boards, balloons,...)
@@ -185,9 +186,9 @@ var game = {
 		this.boardMinWidth = 40;
 		this.hasScored = false
 		this.sleep = false
-		this.jumpOrangeProb = 0
-		this.jumpRedProb = 0
-		this.jumpBlackProb = 0
+		this.boardOrangeProb = 0
+		this.boardRedProb = 0
+		this.boardBlackProb = 0
 		this.started = 0
 		this.score = 0;
 		this.tricks = 0
@@ -197,7 +198,7 @@ var game = {
 		bouncers.push( new Bouncer(15, 15, 0, 0, 330, 20, 0, "#2E9AFE"));
 		bouncers.push( new Bouncer(15, 15, 0, 0, 350, 20, 0, "#2E9AFE"));
 		bouncers.push( new Bouncer(15, 15, 0, 0, 370, 20, 0, "#2E9AFE"));
-		jumps = [];
+		boards = [];
 		balloons = []
 		updateGame();
 		bouncers[0].toPlay()
@@ -211,25 +212,25 @@ var game = {
 	},
 	splash : function(level){
 		if (this.timer !==undefined) clearInterval(this.timer)
-		started = 0;
-		this.clear()
+		this.started = 0;
+		this.clearArea()
 		game.context.fillStyle = "#AAFFAA";
 		this.context.fillRect(this.canvas.width * 0.2, this.canvas.height * 0.2, this.canvas.width * 0.6, this.canvas.height * 0.6);
 		game.context.textAlign="center"; 
 		game.context.font = "35px Impact";
 		game.context.fillStyle = '#33AA33';
 		if (level==1) {
-			game.context.fillText("bouncerJumP",this.canvas.width * 0.5,this.canvas.height * 0.3); 
+			game.context.fillText("bouncer",this.canvas.width * 0.5,this.canvas.height * 0.3); 
 			game.context.fillText("best "+this.bestScore.toString(),this.canvas.width * 0.5,this.canvas.height * 0.7); 
 		} else {
 			game.context.fillText("Level "+level.toString(),this.canvas.width * 0.5,this.canvas.height * 0.4); 
 			game.context.fillText("score "+this.score.toString(),this.canvas.width * 0.5,this.canvas.height * 0.3);
 			if (level==2) {
-				splashComment("high jump","orange")
-				this.jumpOrangeProb=0.2
+				splashComment("high bounce","orange")
+				this.boardOrangeProb=0.2
 			} else if (level==3){
 				splashComment("BIG","red")
-				this.jumpRedProb=0.15
+				this.boardRedProb=0.15
 				this.tricks=1
 			} else if (level==4){
 				splashComment("big boards","red",100)
@@ -239,7 +240,7 @@ var game = {
 				this.tricks = 3
 			} else if (level==6){
 				splashComment("kills","black")
-				this.jumpBlackProb=0.1
+				this.boardBlackProb=0.1
 			} else if (level==7){
 				splashComment("beware of falling boards","red")
 				this.tricks = 4
@@ -258,12 +259,12 @@ var game = {
 		setTimeout("game.sleep=false;",1000)
 	},
 	
-	start : function() {
-		started = 1;
+	startGame : function() {
+		this.started = 1;
 		this.hasScored = false
 		this.timer = setInterval(updateGame, 20);
 	},
-	clear : function() {
+	clearArea : function() {
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 	},
 	scoreZone : function(number) {
@@ -278,29 +279,30 @@ var game = {
 		this.score += n
 		this.hasScored = true
 	},
-	loose : function(){
-		clearInterval(this.timer)
-		this.clear()
-		myPlay(sound_loose)
-		started = 0
-		if (this.score > this.bestScore) this.bestScore = this.score;
-		this.initGame()
-	},
+
 	looseOne : function(deadBouncer) {
 		bouncers.shift();
 		if (bouncers.length == 0) {
-			this.loose()
+			// LOOSE GAME
+			clearInterval(this.timer)
+			this.clearArea()
+			myPlay(sound_loose)
+			this.started = 0
+			if (this.score > this.bestScore) this.bestScore = this.score;
+			this.initGame()
 		}
 		bouncers[0].toPlay();
 		myPlay(sound_loose1)
 	},
-	startBouncerJump :	function () {
+	startBouncer :	function () {
 		this.initArea();
 		this.initGame();
 		
 	},
+	
 	boardSpawner : function(height) {
-		
+	//TODO move to board object
+	
 		if (game.boardMinWidth > 40)
 			game.boardMinWidth -= 10;
 		if (game.boardMaxWidth > 60)
@@ -311,18 +313,18 @@ var game = {
 		speedX = (game.movingBoards>0)? 10*(Math.random()-0.5) : 0
 		boardWidth = Math.floor(Math.random()*(game.boardMaxWidth - game.boardMinWidth + 1) +
 				game.boardMinWidth);
-		jumpPos = Math.floor(Math.random() * (game.canvas.width - boardWidth+1));
-		if (Math.random() < game.jumpOrangeProb)
-			jumps.push(new Board(boardWidth, 10, speedX, 1.8 * speed, jumpPos, height, 0,
+		boardPos = Math.floor(Math.random() * (game.canvas.width - boardWidth+1));
+		if (Math.random() < game.boardOrangeProb)
+			boards.push(new Board(boardWidth, 10, speedX, 1.8 * speed, boardPos, height, 0,
 				"orange",0));
-		else if (Math.random() < game.jumpRedProb)
-			jumps.push(new Board(boardWidth, 10, speedX, 2.5 * speed, jumpPos, height, 0,
+		else if (Math.random() < game.boardRedProb)
+			boards.push(new Board(boardWidth, 10, speedX, 2.5 * speed, boardPos, height, 0,
 				"red",0));
-		else if (Math.random() < game.jumpBlackProb)
-			jumps.push(new Board(boardWidth, 10, speedX, 2.5 * speed, jumpPos, height, 0,
+		else if (Math.random() < game.boardBlackProb)
+			boards.push(new Board(boardWidth, 10, speedX, 2.5 * speed, boardPos, height, 0,
 				"black",0));
 		else
-			jumps.push(new Board(boardWidth, 10, speedX, 1.5 * speed , jumpPos, height, 0,
+			boards.push(new Board(boardWidth, 10, speedX, 1.5 * speed , boardPos, height, 0,
 				"green",0));
 	}
 }
@@ -345,36 +347,36 @@ function myPlay(snd){
 function updateGame() {
 
 
-	// get high jumps when falling boards
+	// get high bounces when falling boards
 	rebound = (game.fallingBoards>0)? -4 : -2
 
 	//process collisions
-	for (i = 0; i < jumps.length; i += 1) {
-		if (bouncers[0].collision(jumps[i]) && (game.time - jumps[i].lastBounce > 30 )) {
-			jumps[i].lastBounce = game.time
-			if (game.fallingBoards>0) jumps[i].gravityY=0.1
-			if (jumps[i].color == "black") game.looseOne()
-			else if (jumps[i].color == "orange") {
+	for (i = 0; i < boards.length; i += 1) {
+		if (bouncers[0].collision(boards[i]) && (game.time - boards[i].lastBounce > 30 )) {
+			boards[i].lastBounce = game.time
+			if (game.fallingBoards>0) boards[i].gravityY=0.1
+			if (boards[i].color == "black") game.looseOne()
+			else if (boards[i].color == "orange") {
 				bouncers[0].speedY = rebound -2 -3*(bouncers[0].y/game.canvas.height)
 				game.addScore(2)
 				myPlay(sound_bounce1)
-			} else if (jumps[i].color == "red") {
+			} else if (boards[i].color == "red") {
 				bouncers[0].speedY = rebound -3*(bouncers[0].y/game.canvas.height)
 				game.addScore(1)
-				jumps[i].color = "orange"
+				boards[i].color = "orange"
 				if (Math.random() < 1/game.tricks) {
 					//BIG Bouncer
 					bouncers[0].height = 70
 					bouncers[0].width = 70
 					myPlay(sound_inflate)
 				} else if (Math.random() < 1/(game.tricks-1)) {
-					//BIG JUMP BOARDS
+					//BIG board BOARDS
 					game.boardMinWidth = 200
 					game.boardMaxWidth = 300
 					myPlay(sound_stretch)
 				} else if (Math.random() < 1/(game.tricks-1)) {
 					//TRICK_YELLOW_BALLOON
-					balloons.push(new Balloon(15, 15, 2*Math.random()-1, 0 , jumps[i].x+jumps[i].width/2, jumps[i].y, 0.02,"yellow"));
+					balloons.push(new Balloon(15, 15, 2*Math.random()-1, 0 , boards[i].x+boards[i].width/2, boards[i].y, 0.02,"yellow"));
 					myPlay(sound_balloon)
 				} else  if (Math.random() < 1/(game.tricks-1)) {
 					//FALLING Boards
@@ -419,11 +421,11 @@ function updateGame() {
 		}
 	}
 	// draw
-	game.clear();
+	game.clearArea();
 	game.time += 1;
 	game.fallingBoards -= 1
 	game.movingBoards -= 1
-	for (i = 0; i < jumps.length; i += 1) jumps[i].update();
+	for (i = 0; i < boards.length; i += 1) boards[i].update();
 	
 	//every 50 ticks, spawn a new jump board
 	if (game.time == 1 || ((game.time / 50) % 1 == 0)) game.boardSpawner(50)

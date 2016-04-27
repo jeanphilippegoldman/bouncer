@@ -7,8 +7,8 @@
 			bouncers[0].gravityX = 0.5; 
 		if ((e.which == 37))
 			bouncers[0].gravityX = -0.5;
-		if ((e.which == 13)||((e.which == 37)||(e.which == 39))&& (started==0)&&(!game.sleep)) {
-			game.start();
+		if ((e.which == 13)||((e.which == 37)||(e.which == 39))&& (game.started==0)&&(!game.sleep)) {
+			game.startGame();
 		}
 	}
 
