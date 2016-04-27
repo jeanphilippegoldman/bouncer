@@ -157,8 +157,6 @@ class Balloon extends Sprite {
 	}
 }
 
-	
-var timer
 var game = {
 	
 	canvas : document.createElement("canvas"),
@@ -212,7 +210,7 @@ var game = {
 		UIMobile()
 	},
 	splash : function(level){
-		if (timer !==undefined) clearInterval(timer)
+		if (this.timer !==undefined) clearInterval(this.timer)
 		started = 0;
 		this.clear()
 		game.context.fillStyle = "#AAFFAA";
@@ -263,7 +261,7 @@ var game = {
 	start : function() {
 		started = 1;
 		this.hasScored = false
-		timer = setInterval(updateGame, 20);
+		this.timer = setInterval(updateGame, 20);
 	},
 	clear : function() {
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -281,7 +279,7 @@ var game = {
 		this.hasScored = true
 	},
 	loose : function(){
-		clearInterval(timer)
+		clearInterval(this.timer)
 		this.clear()
 		myPlay(sound_loose)
 		started = 0
