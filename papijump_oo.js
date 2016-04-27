@@ -1,8 +1,8 @@
 //power of ES6 :)
 // TODO NOW
 // moving boards tends to disappear on sides
-// remove completely papi when loosing
-// papi theme to ???
+// remove completely bouncer when loosing
+// bouncer theme to ???
 // add comments
 // change code for nice new tricks registering
 
@@ -14,7 +14,10 @@
 // down = booster
 // up = fire
 // steady board
-// multiple papi
+// multiple bouncer
+
+
+// general object (extended by bouncers, boards, balloons,...)
 class Sprite {
 	constructor(w,h,sx,sy,x,y,gy,col,frictionX) {
 		//init
@@ -31,18 +34,23 @@ class Sprite {
 		this.comment="";
 		this.frictionX = (typeof frictionX == 'undefined')? 0.05 : frictionX
 		this.frictionY = 0;
-		// new papis are sleeping = 0 (dead=-1).balloons starts as active
+		// new players are sleeping = 0 (dead=-1). balloons starts as active
 		this.active = 0
 	}
 	
+	// compute new speed and position of object
 	update() {
-		//new position
+		//new speed
 		this.speedX = (this.speedX + this.gravityX) * (1 - this.frictionX)
 		this.speedY = (this.speedY + this.gravityY) * (1 - this.frictionY)
+
+		//new position
 		this.x = (this.x + this.speedX) % game.canvas.width;
 		this.x += this.x<0 ? game.canvas.width : 0
 		this.y += this.speedY;
 	}
+
+	// common part of drawing : color, text
 	draw() {
 		game.context.fillStyle = this.color;
 		game.context.font = "20px Impact";
@@ -50,6 +58,7 @@ class Sprite {
 		game.context.fillText(this.comment,this.x +this.width*0.5 ,this.y -5); 
 	}
 		
+	// detect collision, return false/true
 	collision(other) {
 		if (((this.y + this.height) < other.y) 
 			|| (this.y > (other.y + other.height))
@@ -59,7 +68,7 @@ class Sprite {
 	}
 }
 
-class Papi extends Sprite {
+class Bouncer extends Sprite {
 	update(){
 		super.update()
 		if (this.active == 1){
@@ -88,7 +97,7 @@ class Papi extends Sprite {
 		game.context.fillRect(this.x+this.width*0.2, this.y+this.height*0.7, this.width*0.6, this.height*0.1);
 	}
 
-	// transform a waiting papi into a playing papi
+	// transform a waiting Bouncer into a playing Bouncer
 	toPlay() {
 		this.active = 1
 		this.height = 30
@@ -175,21 +184,21 @@ var game = {
 		this.tricks = 0
 		this.level = 1;
 		this.time = 0;
-		papis = [];
-		papis.push( new Papi(15, 15, 0, 0, 330, 20, 0, "#2E9AFE"));
-		papis.push( new Papi(15, 15, 0, 0, 350, 20, 0, "#2E9AFE"));
-		papis.push( new Papi(15, 15, 0, 0, 370, 20, 0, "#2E9AFE"));
+		bouncers = [];
+		bouncers.push( new Bouncer(15, 15, 0, 0, 330, 20, 0, "#2E9AFE"));
+		bouncers.push( new Bouncer(15, 15, 0, 0, 350, 20, 0, "#2E9AFE"));
+		bouncers.push( new Bouncer(15, 15, 0, 0, 370, 20, 0, "#2E9AFE"));
 		jumps = [];
 		stars = []
 		updateGame();
-		papis[0].toPlay()
+		bouncers[0].toPlay()
 		myPlay(sound_start)
 		this.boardSpawner(100);
 		this.boardSpawner(150);
 		this.boardSpawner(200);
 		this.boardSpawner(250);
 		this.splash(1)
-	
+		UIMobile()
 	},
 	splash : function(level){
 		if (timer !==undefined) clearInterval(timer)
@@ -201,7 +210,7 @@ var game = {
 		game.context.font = "35px Impact";
 		game.context.fillStyle = '#33AA33';
 		if (level==1) {
-			game.context.fillText("papiJumP",this.canvas.width * 0.5,this.canvas.height * 0.3); 
+			game.context.fillText("bouncerJumP",this.canvas.width * 0.5,this.canvas.height * 0.3); 
 			game.context.fillText("best "+this.bestScore.toString(),this.canvas.width * 0.5,this.canvas.height * 0.7); 
 		} else {
 			game.context.fillText("Level "+level.toString(),this.canvas.width * 0.5,this.canvas.height * 0.4); 
@@ -268,15 +277,15 @@ var game = {
 		if (this.score > this.bestScore) this.bestScore = this.score;
 		this.initGame()
 	},
-	looseOne : function(deadPapi) {
-		papis.shift();
-		if (papis.length == 0) {
+	looseOne : function(deadBouncer) {
+		bouncers.shift();
+		if (bouncers.length == 0) {
 			this.loose()
 		}
-		papis[0].toPlay();
+		bouncers[0].toPlay();
 		myPlay(sound_loose1)
 	},
-	startPapiJump :	function () {
+	startBouncerJump :	function () {
 		this.initArea();
 		this.initGame();
 		
@@ -332,22 +341,22 @@ function updateGame() {
 
 	//process collisions
 	for (i = 0; i < jumps.length; i += 1) {
-		if (papis[0].collision(jumps[i]) && (game.time - jumps[i].lastBounce > 30 )) {
+		if (bouncers[0].collision(jumps[i]) && (game.time - jumps[i].lastBounce > 30 )) {
 			jumps[i].lastBounce = game.time
 			if (game.fallingBoards>0) jumps[i].gravityY=0.1
 			if (jumps[i].color == "black") game.looseOne()
 			else if (jumps[i].color == "orange") {
-				papis[0].speedY = rebound -2 -3*(papis[0].y/game.canvas.height)
+				bouncers[0].speedY = rebound -2 -3*(bouncers[0].y/game.canvas.height)
 				game.addScore(2)
 				myPlay(sound_bounce1)
 			} else if (jumps[i].color == "red") {
-				papis[0].speedY = rebound -3*(papis[0].y/game.canvas.height)
+				bouncers[0].speedY = rebound -3*(bouncers[0].y/game.canvas.height)
 				game.addScore(1)
 				jumps[i].color = "orange"
 				if (Math.random() < 1/game.tricks) {
-					//BIG PAPI
-					papis[0].height = 70
-					papis[0].width = 70
+					//BIG Bouncer
+					bouncers[0].height = 70
+					bouncers[0].width = 70
 					myPlay(sound_inflate)
 				} else if (Math.random() < 1/(game.tricks-1)) {
 					//BIG JUMP BOARDS
@@ -372,7 +381,7 @@ function updateGame() {
 					myPlay(sound_fall)
 				}
 			} else {
-				papis[0].speedY = rebound -3*(papis[0].y/game.canvas.height)
+				bouncers[0].speedY = rebound -3*(bouncers[0].y/game.canvas.height)
 				game.addScore(1)
 				myPlay(sound_bounce)
 				// TODO: set up a setter
@@ -382,11 +391,11 @@ function updateGame() {
 	}
 
 	for (i = 0; i < stars.length; i += 1) if (stars[i].active) {
-		if (papis[0].collision(stars[i]) && (game.time - stars[i].lastBounce > 40 )) {
+		if (bouncers[0].collision(stars[i]) && (game.time - stars[i].lastBounce > 40 )) {
 			stars[i].lastBounce = game.time
 			if (stars[i].color=="red"){
 				stars[i].active=0
-				papis.push( new Papi(15, 15, 0, 0, 330, 20, 0, "red"));
+				bouncers.push( new Bouncer(15, 15, 0, 0, 330, 20, 0, "red"));
 				myPlay(sound_balloon)				
 				myPlay(sound_balloon)				
 			} else {
@@ -410,7 +419,7 @@ function updateGame() {
 	//every 50 ticks, spawn a new jump board
 	if (game.time == 1 || ((game.time / 50) % 1 == 0)) game.boardSpawner(50)
 	
-	for (i = 0; i < papis.length; i += 1) papis[i].update();
+	for (i = 0; i < bouncers.length; i += 1) bouncers[i].update();
 	for (i = 0; i < stars.length; i += 1) if (stars[i].active) stars[i].update();
 	game.scoreZone();
 	
