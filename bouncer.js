@@ -1,8 +1,6 @@
-//power of ES6 :)
+
 // TODO NOW
-// moving boards tends to disappear on sides
 // remove completely bouncer when loosing
-// bouncer theme to ???
 // add comments
 // change code for nice new tricks registering
 
@@ -17,6 +15,7 @@
 // steady board
 // multiple bouncer
 // game.started usefull ?
+// some moving boards tends to blink on left side
 
 
 // general object (extended by bouncers, boards, balloons,...)
@@ -70,6 +69,7 @@ class Sprite {
 	}
 }
 
+//power of ES6 :)
 class Bouncer extends Sprite {
 	update(){
 		super.update()
@@ -121,6 +121,13 @@ class Bouncer extends Sprite {
 class Board extends Sprite {
 	update(){
 		super.update()
+		
+		// boards bounce on vertical sides (if have xspeed)
+		if (((this.x - this.width/2)<0) || ((this.x + this.width/2) > game.canvas.width) ) {
+			this.speedX *= -1.0
+			this.x += this.speedX;	
+		}
+		
 		this.draw()
 	}
 	draw(){
@@ -181,18 +188,18 @@ var game = {
 	},
 	initGame : function() {
 		this.fallingBoards = 0,
-		this.movingBoards= 0,
+		this.movingBoards= 50000,
 		this.boardMaxWidth = 60;
 		this.boardMinWidth = 40;
 		this.hasScored = false
 		this.sleep = false
 		this.boardOrangeProb = 0
-		this.boardRedProb = 0
+		this.boardRedProb = 0.5
 		this.boardBlackProb = 0
 		this.started = 0
 		this.score = 0;
 		this.tricks = 0
-		this.level = 1;
+		this.level = 10;
 		this.time = 0;
 		bouncers = [];
 		bouncers.push( new Bouncer(15, 15, 0, 0, 330, 20, 0, "#2E9AFE"));
@@ -248,6 +255,7 @@ var game = {
 				splashComment("red balls give life","red",15)
 				this.tricks = 5
 			} else if (level==9){
+				//TRICK_MOVING_BOARDS
 				splashComment("moving boards","red")
 				this.tricks = 6
 			}
@@ -264,9 +272,11 @@ var game = {
 		this.hasScored = false
 		this.timer = setInterval(updateGame, 20);
 	},
+	
 	clearArea : function() {
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 	},
+	
 	scoreZone : function(number) {
 		game.context.font = "25px Impact";
 		game.context.fillStyle = "black";
@@ -310,7 +320,9 @@ var game = {
 		
 		//boards fall faster and faster with score
 		speed = Math.log(game.score + 1)/15 + 1
+		//TRICK_MOVING_BOARDS affects speedX of new boards
 		speedX = (game.movingBoards>0)? 10*(Math.random()-0.5) : 0
+		
 		boardWidth = Math.floor(Math.random()*(game.boardMaxWidth - game.boardMinWidth + 1) +
 				game.boardMinWidth);
 		boardPos = Math.floor(Math.random() * (game.canvas.width - boardWidth+1));
@@ -346,11 +358,10 @@ function myPlay(snd){
 
 function updateGame() {
 
-
 	// get high bounces when falling boards
 	rebound = (game.fallingBoards>0)? -4 : -2
 
-	//process collisions
+	//process collisions with boards
 	for (i = 0; i < boards.length; i += 1) {
 		if (bouncers[0].collision(boards[i]) && (game.time - boards[i].lastBounce > 30 )) {
 			boards[i].lastBounce = game.time
@@ -379,7 +390,7 @@ function updateGame() {
 					balloons.push(new Balloon(15, 15, 2*Math.random()-1, 0 , boards[i].x+boards[i].width/2, boards[i].y, 0.02,"yellow"));
 					myPlay(sound_balloon)
 				} else  if (Math.random() < 1/(game.tricks-1)) {
-					//FALLING Boards
+					//TRICK_FALLING_BOARDS
 					game.fallingBoards = 500
 					myPlay(sound_fall)
 				} else if (Math.random() < 1/(game.tricks-1)) {
@@ -387,7 +398,7 @@ function updateGame() {
 					balloons.push(new Balloon(15, 15, 2*Math.random()-1, 2*Math.random() , 200, 50, 0.02,"red"));
 					myPlay(sound_balloon)
 				} else  {
-					//MOVING Boards
+					//TRICK_MOVING_BOARDS
 					game.movingBoards = 500
 					myPlay(sound_fall)
 				}
@@ -401,6 +412,7 @@ function updateGame() {
 		}
 	}
 
+	//process collisions with balloons
 	for (i = 0; i < balloons.length; i += 1) if (balloons[i].active) {
 		if (bouncers[0].collision(balloons[i]) && (game.time - balloons[i].lastBounce > 40 )) {
 			balloons[i].lastBounce = game.time
@@ -420,8 +432,10 @@ function updateGame() {
 			}
 		}
 	}
-	// draw
+	
+	// update and draw
 	game.clearArea();
+	//TODO make function updateGame
 	game.time += 1;
 	game.fallingBoards -= 1
 	game.movingBoards -= 1
