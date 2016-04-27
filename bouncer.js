@@ -1,7 +1,6 @@
 
 // TODO NOW
 // remove completely bouncer when loosing
-// add comments
 // change code for nice new tricks registering
 
 // TODO later
@@ -16,6 +15,7 @@
 // multiple bouncer
 // game.started usefull ?
 // some moving boards tends to blink on left side
+
 
 
 // general object (extended by bouncers, boards, balloons,...)
@@ -77,7 +77,7 @@ class Bouncer extends Sprite {
 			//bottom screen fall > loose one
 			if (this.y > game.canvas.height - this.height) game.looseOne(this)
 
-				//TRICK_deflate 
+			//TRICK_BIG_BOUNCER deflates
 			if (this.height > 30)
 				this.height -= 0.06
 			if (this.width > 30)
@@ -236,22 +236,28 @@ var game = {
 				splashComment("high bounce","orange")
 				this.boardOrangeProb=0.2
 			} else if (level==3){
+				//TRICK_BIG_BOUNCER
 				splashComment("BIG","red")
 				this.boardRedProb=0.15
 				this.tricks=1
 			} else if (level==4){
+				//TRICK_BIG_BOARDS
 				splashComment("big boards","red",100)
 				this.tricks=2
 			} else if (level==5){
+				//TRICK_YELLOW_BALLOON
 				splashComment("yellow balloons gives points","yellow",15)
 				this.tricks = 3
 			} else if (level==6){
+				//TRICK_BLACK_BOARDS
 				splashComment("kills","black")
 				this.boardBlackProb=0.1
 			} else if (level==7){
+				//TRICK_FALLING_BOARDS
 				splashComment("beware of falling boards","red")
 				this.tricks = 4
 			} else if (level==8){
+				//TRICK_RED_BALLOON
 				splashComment("red balls give life","red",15)
 				this.tricks = 5
 			} else if (level==9){
@@ -259,9 +265,6 @@ var game = {
 				splashComment("moving boards","red")
 				this.tricks = 6
 			}
-			//NEXT TRICKS
-			// get booster
-			// red balloon = new life
 		}
 		this.sleep = true
 		setTimeout("game.sleep=false;",1000)
@@ -313,6 +316,8 @@ var game = {
 	boardSpawner : function(height) {
 	//TODO move to board object
 	
+		//TRICK_BIG_BOARDS
+		// TODO move to game.update() ?
 		if (game.boardMinWidth > 40)
 			game.boardMinWidth -= 10;
 		if (game.boardMaxWidth > 60)
