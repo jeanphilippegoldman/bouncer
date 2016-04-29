@@ -15,7 +15,7 @@
 // multiple bouncer
 // game.started usefull ?
 // some moving boards tends to blink on left side
-
+// ballons make bounce
 
 
 // general object (extended by bouncers, boards, balloons,...)
